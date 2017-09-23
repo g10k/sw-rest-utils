@@ -1,8 +1,10 @@
 # coding: utf-8
 from typing import Dict
 import logging
-from django.conf import settings
+import datetime
 import requests
+
+from django.conf import settings
 
 logger = logging.getLogger('sw.rest')
 
@@ -64,8 +66,17 @@ class BaseRest:
 
     @staticmethod
     def get_response_result(response: requests.Response):
-        return response.json()
+        return response.json(object_hook=BaseRest._date_hook)
 
+    @staticmethod
+    def _date_hook(json_dict):
+        for (key, value) in json_dict.items():
+            try:
+                json_dict[key] = datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%S")
+            except Exception as exc:
+                pass
+        return json_dict
+    
     def get_url(self) -> str:
         return self.url
 
